@@ -6,10 +6,7 @@ on:
 jobs:
   build:
     permissions: write-all
-    runs-on: ubuntu-latest
-    env:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+    runs-on: namespace-profile-test
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'Merge')
     steps:
       - uses: actions/checkout@v6
@@ -70,26 +67,3 @@ jobs:
             app/build/outputs/apk/whatsapp/debug/app-whatsapp-debug.apk
             app/build/outputs/apk/business/debug/app-business-debug.apk
           tag_name: debug-${{ env.SHORT_SHA }}
-
-      - name: Read changelog
-        if: ${{ success() && github.ref == 'refs/heads/master' && github.ref_type != 'tag' && env.BOT_TOKEN != '' }}
-        id: changelog
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const fs = require('fs');
-            const changelog = fs.readFileSync('changelog.txt', 'utf8').trim();
-            core.setOutput('content', changelog);
-
-      - name: Post to Telegram channel
-        if: ${{ success() && github.ref == 'refs/heads/master' && github.ref_type != 'tag' && env.BOT_TOKEN != '' }}
-        uses: Dev4Mod/telegram-github-action@master
-        with:
-          to: ${{ env.CHANNEL_ID }}
-          token: ${{ env.BOT_TOKEN }}
-          format: markdown
-          disable_web_page_preview: true
-          message: |
-            ${{ steps.changelog.outputs.content }}
-
-            Release: https://github.com/${{ github.repository }}/releases/tag/debug-${{ env.SHORT_SHA }}
